@@ -1,0 +1,66 @@
+groups:
+    - name: 主机状态-监控告警
+      rules:
+      - alert: 主机状态
+        expr: up{job=~"node"} == 0
+        for: 1m
+        labels:
+          status: critical
+        annotations:
+          summary: "{{$labels.instance}}:服务器宕机"
+          description: "{{$labels.instance}}:服务器延时超过1分钟"
+
+      - alert: CPU使用情况
+        expr: 100-(avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) by(instance)* 100) > 90
+        for: 1m
+        labels:
+          status: warning
+        annotations:
+          summary: "{{$labels.mountpoint}} CPU使用率过高！"
+          description: "{{$labels.mountpoint }} CPU使用大于90%(目前使用:{{$value}}%)"
+
+      - alert: 内存使用
+        expr: 100 -(node_memory_MemTotal_bytes -node_memory_MemFree_bytes+node_memory_Buffers_bytes+node_memory_Cached_bytes ) / node_memory_MemTotal_bytes * 100> 90
+        for: 1m
+        labels:
+          status: critical
+        annotations:
+          summary: "{{$labels.mountpoint}} 内存使用率过高！"
+          description: "{{$labels.mountpoint }} 内存使用大于90%(目前使用:{{$value}}%)"
+
+      - alert: 磁盘容量
+        expr: 100-(node_filesystem_free_bytes{fstype=~"ext4|xfs"}/node_filesystem_size_bytes {fstype=~"ext4|xfs"}*100) > 80
+        for: 1m
+        labels:
+          status: warning
+        annotations:
+          summary: "{{$labels.mountpoint}} 磁盘分区使用率过高！"
+          description: "{{$labels.mountpoint }} 磁盘分区使用大于80%(目前使用:{{$value}}%)"
+
+      - alert: 服务器5xx错误
+        expr: sum((irate(django_http_responses_total_by_status_total{status=~"5.+"}[1m]))) > 30
+        for: 1m
+        labels:
+          status: warning
+        annotations:
+          summary: "{{$labels.mountpoint}}5xx错误"
+          description: "{{$labels.mountpoint}}服务器出现5xx错误"
+
+      - alert: 磁盘容量 Critical Test
+        expr: 100-(node_filesystem_free_bytes{fstype=~"ext4|xfs"}/node_filesystem_size_bytes {fstype=~"ext4|xfs"}*100) > 90
+        for: 1m
+        labels:
+          status: critical
+        annotations:
+          summary: "{{$labels.mountpoint}} 磁盘分区使用率过高！"
+          description: "{{$labels.mountpoint }} 磁盘分区使用大于90%(目前使用:{{$value}}%)"
+
+      - alert: nginx 5xx
+        expr: rate(nginx_vts_server_requests_total{code="5xx", host!="*", host!="_"}[5m]) > 0.1
+        for: 1m
+        labels:
+          status: critical
+        annotations:
+          summary: "{{$labels.instance}} nginx 5xx 错误"
+          description: "{{$labels.host}} 服务器出现 5xx 错误"
+

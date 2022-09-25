@@ -1,0 +1,24 @@
+route:
+    receiver: 'custom'
+    routes:
+       - receiver: 'warning'
+         match_re:
+             status: warning
+
+       - receiver: 'critical'
+         match_re:
+             status: critical
+
+receivers:
+    - name: 'custom'
+      webhook_configs:
+          - url: http://172.17.0.1:5000/message
+
+    - name: 'warning'
+      webhook_configs:
+          - url: http://172.17.0.1:5000/normal_message
+
+    - name: 'critical'
+      webhook_configs:
+          - url: http://172.17.0.1:5000/critical_message
+
